@@ -6,12 +6,13 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email_verified == true;
     }
     function isOwner() {
-      return signedIn() && request.auth.token.email.lower() == 'maximilianoibalborde@gmail.com';
+      // Gmail ignora los puntos: se comparan sin puntos
+      return signedIn() && request.auth.token.email.lower().replace('[.]', '') == 'maximilianoibalborde@gmailcom';
     }
     function isMember() {
       return signedIn() && (
         isOwner() ||
-        request.auth.token.email.lower() in get(/databases/$(database)/documents/config/members).data.emails
+        request.auth.token.email.lower().replace('[.]', '') in get(/databases/$(database)/documents/config/members).data.keys
       );
     }
     function validParty() {

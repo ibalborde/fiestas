@@ -166,7 +166,7 @@
 <div class="lightbox" id="lightbox"><img id="lightImg" alt=""></div>
 
 <script type="module">
-import { FIREBASE_CONFIG, OWNER_EMAIL } from './config.js';
+import { FIREBASE_CONFIG, OWNER_EMAIL } from './config.js?v=3';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, writeBatch, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -174,7 +174,10 @@ import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, w
 const $ = s => document.querySelector(s);
 const VOTES=[{k:'si',label:'🔥 Voy'},{k:'tal',label:'🤔 Tal vez'},{k:'no',label:'❌ Paso'}];
 const F=['nombre','fecha','hora','lugar','ciudad','precio','lineup','link','notas'];
-const owner=(OWNER_EMAIL||'').trim().toLowerCase();
+// Gmail ignora los puntos: maxi.mo@gmail.com y maximo@gmail.com son la misma cuenta
+const normEmail=e=>{let [u,d]=String(e||'').trim().toLowerCase().split('@');if(!d)return u||'';if(d==='gmail.com'||d==='googlemail.com'){u=u.replace(/\./g,'');d='gmail.com';}return u+'@'+d;};
+const owner=normEmail(OWNER_EMAIL);
+const memberKey=e=>String(e||'').trim().toLowerCase().replace(/\./g,''); // misma clave que usan las reglas
 
 const app=initializeApp(FIREBASE_CONFIG);
 const auth=getAuth(app);
@@ -217,10 +220,10 @@ function renderNotices(){
 }
 onAuthStateChanged(auth,async u=>{
   me=u?{uid:u.uid,email:(u.email||'').toLowerCase(),name:u.displayName||(u.email||'').split('@')[0]}:null;
-  isOwner=!!me&&me.email===owner&&u.emailVerified;
+  isOwner=!!me&&normEmail(me.email)===owner&&u.emailVerified;
   isMember=false;members=[];
   if(me){
-    try{const s=await getDoc(doc(db,'config','members'));members=(s.exists()&&Array.isArray(s.data().emails))?s.data().emails:[];isMember=isOwner||members.includes(me.email);}
+    try{const s=await getDoc(doc(db,'config','members'));members=(s.exists()&&Array.isArray(s.data().emails))?s.data().emails:[];isMember=isOwner||members.map(memberKey).includes(memberKey(me.email));}
     catch(e){isMember=isOwner;}
   }
   $('#addBtn').hidden=!canWrite();
@@ -395,10 +398,10 @@ $('#membersScrim').addEventListener('click',e=>{if(e.target.id==='membersScrim')
 function renderMembers(){
   const ul=$('#membersList');ul.textContent='';
   ul.append(el('li',null,el('span',null,owner+' (admin)')));
-  members.filter(m=>m!==owner).forEach(m=>ul.append(el('li',null,el('span',null,m),el('button',{class:'icon',type:'button',onclick:()=>saveMembers(members.filter(x=>x!==m))},'Quitar'))));
+  members.filter(m=>normEmail(m)!==owner).forEach(m=>ul.append(el('li',null,el('span',null,m),el('button',{class:'icon',type:'button',onclick:()=>saveMembers(members.filter(x=>x!==m))},'Quitar'))));
 }
 async function saveMembers(list){
-  try{await setDoc(doc(db,'config','members'),{emails:list});members=list;renderMembers();}
+  try{await setDoc(doc(db,'config','members'),{emails:list,keys:list.map(memberKey)});members=list;renderMembers();}
   catch(e){$('#membersErr').textContent='No se pudo guardar.';}
 }
 $('#memberAdd').onclick=()=>{
@@ -416,7 +419,7 @@ async function importSeed(e){
     const b=writeBatch(db);
     (seed.parties||[]).forEach(p=>{const {id,...rest}=p;b.set(doc(db,'parties',id),rest);});
     (seed.votes||[]).forEach(v=>{const {id,...rest}=v;b.set(doc(db,'votes',id),rest);});
-    if(Array.isArray(seed.members)&&seed.members.length){const cur=new Set(members);seed.members.forEach(m=>cur.add(String(m).toLowerCase()));members=[...cur];b.set(doc(db,'config','members'),{emails:members});}
+    if(Array.isArray(seed.members)&&seed.members.length){const cur=new Set(members);seed.members.forEach(m=>cur.add(String(m).toLowerCase()));members=[...cur];b.set(doc(db,'config','members'),{emails:members,keys:members.map(memberKey)});}
     b.set(doc(db,'config','meta'),{imported:true,at:Date.now()});
     await b.commit();
   }catch(err){btn.disabled=false;btn.textContent='Importar';setStatus('No se pudo importar. Probá de nuevo.',true);}
