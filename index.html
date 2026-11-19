@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿A qué fiesta vamos?</title>
+<meta name="description" content="Fiestas electrónicas que estamos pensando ir a ver, y cómo va la votación.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0b10; --panel:#14141c; --panel2:#1b1b26; --line:#2a2a3a;
+    --text:#ececf3; --muted:#9494a8; --acid:#c6ff3d; --pink:#ff4fd8; --cyan:#3de0ff; --red:#ff5a5a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;min-height:100vh;
+    background-image:radial-gradient(circle at 15% -10%, rgba(255,79,216,.18), transparent 40%),radial-gradient(circle at 100% 0%, rgba(61,224,255,.12), transparent 35%);}
+  .wrap{max-width:860px;margin:0 auto;padding:22px 18px 80px}
+  .topbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:18px;flex-wrap:wrap;min-height:34px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  h1{margin:0;font-size:clamp(28px,5vw,44px);line-height:1;letter-spacing:-.02em}
+  h1 span{color:var(--acid)}
+  .sub{color:var(--muted);margin-top:8px;font-size:14px}
+  button{font-family:inherit;cursor:pointer}
+  .btn{background:var(--acid);color:#0b0b10;border:0;border-radius:999px;padding:11px 18px;font-weight:700;font-size:14px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .small{font-size:13px;padding:7px 12px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 13px;font-size:13px}
+  .chip.on{color:var(--text);border-color:var(--text)}
+  .status{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin:10px 0 16px;min-height:16px}
+  .status.warn{color:#ffb84d}
+  .notice{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--muted);margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;display:grid;grid-template-columns:78px 1fr;gap:16px;position:relative}
+  .card.hasimg{grid-template-columns:78px 1fr 150px}
+  .card.lead{border-color:var(--acid);box-shadow:0 0 0 1px var(--acid),0 0 30px rgba(198,255,61,.12)}
+  .card.past{opacity:.5}
+  .flyer{width:150px;aspect-ratio:1/1;object-fit:cover;border-radius:12px;background:var(--panel2);cursor:zoom-in;display:block;border:1px solid var(--line)}
+  .date{background:var(--panel2);border-radius:12px;text-align:center;padding:10px 4px;height:fit-content;font-family:'JetBrains Mono',monospace}
+  .date .d{font-size:28px;font-weight:600;line-height:1}
+  .date .m{font-size:12px;text-transform:uppercase;color:var(--pink);margin-top:4px;letter-spacing:.08em}
+  .date .w{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+  .title{font-size:20px;font-weight:700;margin:0 0 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-right:60px}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--acid);color:#0b0b10;border-radius:6px;padding:2px 7px;font-weight:600}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:14px;margin-bottom:8px}
+  .meta b{color:var(--text);font-weight:500}
+  .lineup{font-size:14px;margin:6px 0;color:var(--cyan)}
+  .notes{font-size:14px;color:var(--muted);margin:6px 0;white-space:pre-wrap}
+  .link a{color:var(--pink);font-size:14px}
+  .votes{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .vbtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:8px 12px;font-size:14px;display:flex;align-items:center;gap:6px}
+  .vbtn:disabled{cursor:default;opacity:1}
+  .vbtn .n{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:13px}
+  .vbtn.on.si{border-color:var(--acid);background:rgba(198,255,61,.12)}
+  .vbtn.on.tal{border-color:var(--cyan);background:rgba(61,224,255,.1)}
+  .vbtn.on.no{border-color:var(--red);background:rgba(255,90,90,.1)}
+  .who{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .who span.si{color:var(--acid)} .who span.tal{color:var(--cyan)} .who span.no{color:var(--red)}
+  .tools{position:absolute;top:14px;right:14px;display:flex;gap:4px}
+  .card.hasimg .tools{right:180px}
+  .icon{background:transparent;border:0;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px}
+  .icon:hover{color:var(--text);background:var(--panel2)}
+  .empty{text-align:center;color:var(--muted);padding:50px 20px;border:1px dashed var(--line);border-radius:18px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:10}
+  .scrim.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;width:100%;max-width:520px}
+  .modal h2{margin:0 0 16px;font-size:20px}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.06em}
+  input,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px}
+  input:focus,textarea:focus{outline:none;border-color:var(--acid)}
+  textarea{resize:vertical;min-height:64px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .err{color:var(--red);font-size:13px;margin-top:10px;min-height:16px}
+  .imgbox{border:1px dashed var(--line);border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .imgbox img{width:84px;height:84px;object-fit:cover;border-radius:8px}
+  .imgbox .hint{font-size:12.5px;color:var(--muted);flex:1;min-width:160px}
+  .imgbox input[type=file]{display:none}
+  .members li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .members ul{list-style:none;margin:8px 0 0;padding:0}
+  .addrow{display:flex;gap:8px;margin-top:12px}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:20;padding:20px;cursor:zoom-out}
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:12px}
+  .pend{font-family:'JetBrains Mono',monospace;font-size:13px;white-space:pre-wrap;word-break:break-all}
+  @media (max-width:640px){.card.hasimg{grid-template-columns:60px 1fr}.card.hasimg .flyerwrap{grid-column:1 / -1;grid-row:1}.flyer{width:100%;aspect-ratio:auto;max-height:340px;object-fit:contain;background:#000}.card.hasimg .tools{right:14px;top:auto;bottom:14px}}
+  @media (max-width:520px){.card{grid-template-columns:60px 1fr;padding:14px;gap:12px}.date .d{font-size:22px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar" id="topbar"></div>
+  <header>
+    <div>
+      <h1>¿A qué fiesta <span>vamos?</span></h1>
+      <div class="sub">Cargá las fiestas, votá y vemos cuál gana.</div>
+    </div>
+    <button class="btn" id="addBtn" hidden>+ Agregar fiesta</button>
+  </header>
+  <div id="notices"></div>
+  <div class="bar">
+    <button class="chip on" data-sort="votos">Más votadas</button>
+    <button class="chip" data-sort="fecha">Por fecha</button>
+    <button class="chip" id="pastToggle">Mostrar pasadas</button>
+  </div>
+  <div class="status" id="status">Cargando…</div>
+  <div id="list"></div>
+</div>
+
+<!-- Formulario de fiesta -->
+<div class="scrim" id="scrim">
+  <form class="modal" id="form">
+    <h2 id="formTitle">Nueva fiesta</h2>
+    <label for="f-nombre">Nombre / evento *</label>
+    <input id="f-nombre" required maxlength="120" placeholder="Ej: Afterlife, Kompakt Night…">
+    <div class="row">
+      <div><label for="f-fecha">Fecha *</label><input id="f-fecha" type="date" required></div>
+      <div><label for="f-hora">Hora</label><input id="f-hora" type="time"></div>
+    </div>
+    <div class="row">
+      <div><label for="f-lugar">Lugar *</label><input id="f-lugar" required maxlength="120" placeholder="Club / predio"></div>
+      <div><label for="f-ciudad">Ciudad</label><input id="f-ciudad" maxlength="80"></div>
+    </div>
+    <label for="f-precio">Precio</label>
+    <input id="f-precio" maxlength="80" placeholder="Ej: $45.000 preventa 2">
+    <label for="f-lineup">Line-up</label>
+    <input id="f-lineup" maxlength="300" placeholder="Artistas separados por coma">
+    <label for="f-link">Link de entradas / info</label>
+    <input id="f-link" type="url" maxlength="500" placeholder="https://…">
+    <label>Imagen / flyer</label>
+    <div class="imgbox" id="imgbox">
+      <img id="imgPreview" alt="" hidden>
+      <div class="hint" id="imgHint">Subí el flyer o pegalo acá con Ctrl+V / Cmd+V. Si no subís nada y pusiste el link, se intenta sacar de ahí a la noche.</div>
+      <input type="file" id="imgFile" accept="image/*">
+      <button type="button" class="btn ghost small" id="imgPick">Subir imagen</button>
+      <button type="button" class="btn ghost small" id="imgRemove" hidden>Quitar</button>
+    </div>
+    <label for="f-notas">Notas</label>
+    <textarea id="f-notas" maxlength="600" placeholder="Dress code, cómo llegar, quién maneja…"></textarea>
+    <div class="err" id="formErr"></div>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="cancelBtn">Cancelar</button>
+      <button type="submit" class="btn" id="saveBtn">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<!-- Miembros (solo admin) -->
+<div class="scrim" id="membersScrim">
+  <div class="modal members">
+    <h2>Quién puede votar y cargar</h2>
+    <div class="sub">Tienen que entrar con la cuenta de Google de ese email. Cualquiera puede ver la página sin entrar.</div>
+    <ul id="membersList"></ul>
+    <div class="addrow">
+      <input id="memberEmail" type="email" placeholder="email@gmail.com">
+      <button class="btn small" id="memberAdd" type="button">Agregar</button>
+    </div>
+    <div class="err" id="membersErr"></div>
+    <div class="actions"><button class="btn ghost" id="membersClose" type="button">Listo</button></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightImg" alt=""></div>
+
+<script type="module">
+import { FIREBASE_CONFIG, OWNER_EMAIL } from './config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDoc, writeBatch, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const $ = s => document.querySelector(s);
+const VOTES=[{k:'si',label:'🔥 Voy'},{k:'tal',label:'🤔 Tal vez'},{k:'no',label:'❌ Paso'}];
+const F=['nombre','fecha','hora','lugar','ciudad','precio','lineup','link','notas'];
+const owner=(OWNER_EMAIL||'').trim().toLowerCase();
+
+const app=initializeApp(FIREBASE_CONFIG);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let me=null, isOwner=false, isMember=false, members=[];
+let parties=[], votes={}, meta={};
+let sortBy='votos', showPast=false, editingId=null, formImg=null, formImgChanged=false;
+let gotParties=false;
+const flyerCache={}; // id -> url | null | 'loading'
+
+// ---------- utilidades ----------
+function setStatus(t,warn){const s=$('#status');s.textContent=t||'';s.classList.toggle('warn',!!warn);}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseDate(s){const [y,m,d]=(s||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1);}
+function safeUrl(u){try{const x=new URL(u);return (x.protocol==='https:'||x.protocol==='http:')?x.href:null;}catch(e){return null;}}
+function el(tag,attrs,...kids){const e=document.createElement(tag);if(attrs)for(const k in attrs){const v=attrs[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v);}for(const c of kids){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(String(c)));}return e;}
+const canWrite=()=>!!me&&(isOwner||isMember);
+
+// ---------- auth ----------
+async function login(){
+  const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+  try{await signInWithPopup(auth,p);}
+  catch(e){ if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')) await signInWithRedirect(auth,p);
+    else if(e&&e.code!=='auth/popup-closed-by-user'&&e.code!=='auth/cancelled-popup-request') setStatus('No se pudo iniciar sesión. Probá de nuevo.',true); }
+}
+function renderTopbar(){
+  const t=$('#topbar');t.textContent='';
+  if(!me){t.append(el('span',null,'¿Sos del grupo?'),el('button',{class:'btn ghost small',type:'button',onclick:login},'Entrar con Google'));return;}
+  t.append(el('span',null,me.email));
+  if(isOwner)t.append(el('button',{class:'btn ghost small',type:'button',onclick:openMembers},'👥 Miembros'));
+  t.append(el('button',{class:'btn ghost small',type:'button',onclick:()=>signOut(auth)},'Salir'));
+}
+function renderNotices(){
+  const n=$('#notices');n.textContent='';
+  if(me&&!canWrite()) n.append(el('div',{class:'notice'},el('span',null,'Entraste como '+me.email+', pero ese email no está en el grupo. Pedile al admin que te agregue para votar y cargar fiestas.')));
+  if(isOwner&&!meta.imported) n.append(el('div',{class:'notice'},el('span',null,'Hay fiestas de la versión anterior para traer (con sus flyers).'),el('button',{class:'btn small',type:'button',onclick:importSeed},'Importar')));
+  if(isOwner&&Object.keys(votes).some(k=>k.startsWith('legacy-')))
+    n.append(el('div',{class:'notice'},el('span',null,'Quedan votos de la versión anterior ("Votante anterior"). Cuando todos hayan vuelto a votar, podés borrarlos.'),el('button',{class:'btn ghost small',type:'button',onclick:clearLegacy},'Borrar votos viejos')));
+}
+onAuthStateChanged(auth,async u=>{
+  me=u?{uid:u.uid,email:(u.email||'').toLowerCase(),name:u.displayName||(u.email||'').split('@')[0]}:null;
+  isOwner=!!me&&me.email===owner&&u.emailVerified;
+  isMember=false;members=[];
+  if(me){
+    try{const s=await getDoc(doc(db,'config','members'));members=(s.exists()&&Array.isArray(s.data().emails))?s.data().emails:[];isMember=isOwner||members.includes(me.email);}
+    catch(e){isMember=isOwner;}
+  }
+  $('#addBtn').hidden=!canWrite();
+  renderTopbar();renderNotices();render();
+});
+
+// ---------- datos en vivo ----------
+const loadTimer=setTimeout(()=>{if(!gotParties)setStatus('No se pueden cargar los datos todavía. Revisá tu conexión.',true);},10000);
+onSnapshot(collection(db,'parties'),snap=>{
+  parties=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(!snap.metadata.fromCache){gotParties=true;clearTimeout(loadTimer);setStatus('');}
+  render();
+},err=>{clearTimeout(loadTimer);setStatus('No se pudieron cargar las fiestas. Recargá la página.',true);});
+onSnapshot(collection(db,'votes'),snap=>{
+  const next={};snap.docs.forEach(d=>{next[d.id]=d.data()||{};});votes=next;render();renderNotices();
+},()=>{});
+onSnapshot(doc(db,'config','meta'),s=>{meta=s.exists()?s.data():{};renderNotices();},()=>{});
+
+// ---------- flyers ----------
+function loadFlyer(id){
+  if(id in flyerCache)return;
+  flyerCache[id]='loading';
+  getDoc(doc(db,'flyers',id)).then(s=>{
+    const d=s.exists()&&s.data().data;
+    if(typeof d==='string'&&d.startsWith('data:image/')){flyerCache[id]=d;render();return;}
+    // si no hay en la base, probar con el archivo del sitio (los carga la tarea nocturna)
+    const url='flyers/'+encodeURIComponent(id)+'.jpg?v='+Math.floor(Date.now()/3600000);
+    const probe=new Image();probe.onload=()=>{flyerCache[id]=url;render();};probe.onerror=()=>{flyerCache[id]=null;if(location.hash==='#pendientes')render();};probe.src=url;
+  }).catch(()=>{flyerCache[id]=null;if(location.hash==='#pendientes')render();});
+}
+function flyerOf(id){const v=flyerCache[id];return (v&&v!=='loading')?v:null;}
+
+// ---------- render ----------
+function tally(pid){const t={si:[],tal:[],no:[]};for(const uid in votes){const k=votes[uid]?.v?.[pid];if(t[k])t[k].push(uid);}return t;}
+const score=t=>t.si.length*2+t.tal.length;
+function nameOf(uid){if(me&&uid===me.uid)return 'Vos';return (votes[uid]&&votes[uid].name)||'Alguien';}
+
+function render(){
+  if(location.hash==='#pendientes'){renderPending();return;}
+  const list=$('#list');list.textContent='';
+  const today=todayStr();
+  let items=parties.map(p=>{const t=tally(p.id);return {...p,t,s:score(t),past:(p.fecha||'')<today};});
+  if(!showPast)items=items.filter(p=>!p.past);
+  items.sort((a,b)=>sortBy==='votos'?(b.s-a.s)||(a.fecha||'').localeCompare(b.fecha||''):(a.fecha||'').localeCompare(b.fecha||''));
+  const top=items.filter(p=>!p.past).reduce((m,p)=>Math.max(m,p.s),0);
+  if(!items.length){
+    if(gotParties)list.append(el('div',{class:'empty'},el('div',{class:'big'},'🎧'),parties.length?'No hay fiestas próximas. Activá "Mostrar pasadas".':'Todavía no hay fiestas cargadas.'));
+    return;
+  }
+  for(const p of items){
+    loadFlyer(p.id);
+    const img=flyerOf(p.id);
+    const d=parseDate(p.fecha);
+    const myVote=me?votes[me.uid]?.v?.[p.id]:null;
+    const lead=top>0&&p.s===top&&!p.past;
+    const url=p.link&&safeUrl(p.link);
+    const mine=canWrite()&&(isOwner||p.createdBy===me.uid);
+    const votesRow=el('div',{class:'votes'},...VOTES.map(v=>{const b=el('button',{class:'vbtn '+v.k+(myVote===v.k?' on':''),type:'button',title:canWrite()?'':'Entrá con tu cuenta del grupo para votar',onclick:()=>vote(p.id,v.k)},v.label,el('span',{class:'n'},p.t[v.k].length));if(!canWrite())b.disabled=true;return b;}));
+    const whoParts=VOTES.filter(v=>p.t[v.k].length).map(v=>el('div',null,el('span',{class:v.k},v.label.split(' ')[0]+' '),p.t[v.k].map(nameOf).join(', ')));
+    list.append(el('div',{class:'card'+(lead?' lead':'')+(p.past?' past':'')+(img?' hasimg':'')},
+      el('div',{class:'date'},el('div',{class:'d'},d.getDate()),el('div',{class:'m'},d.toLocaleDateString('es-AR',{month:'short'}).replace('.','')),el('div',{class:'w'},d.toLocaleDateString('es-AR',{weekday:'short'}).replace('.',''))),
+      el('div',null,
+        el('h3',{class:'title'},p.nombre||'Sin nombre',lead?el('span',{class:'badge'},'VA GANANDO'):null),
+        el('div',{class:'meta'},
+          el('span',null,'📍 ',el('b',null,p.lugar||'—'),p.ciudad?' · '+p.ciudad:''),
+          p.hora?el('span',null,'🕒 ',el('b',null,p.hora)):null,
+          p.precio?el('span',null,'💸 ',el('b',null,p.precio)):null),
+        p.lineup?el('div',{class:'lineup'},'🎛️ '+p.lineup):null,
+        p.notas?el('div',{class:'notes'},p.notas):null,
+        url?el('div',{class:'link'},el('a',{href:url,target:'_blank',rel:'noopener noreferrer'},'Entradas / info ↗')):null,
+        votesRow,
+        whoParts.length?el('div',{class:'who'},...whoParts):null,
+        p.createdByName?el('div',{class:'who'},'Cargada por '+p.createdByName):null),
+      img?el('div',{class:'flyerwrap'},el('img',{class:'flyer',src:img,alt:'Flyer de '+(p.nombre||'la fiesta'),loading:'lazy',onclick:()=>openLight(img)})):null,
+      mine?el('div',{class:'tools'},
+        el('button',{class:'icon',type:'button',title:'Editar',onclick:()=>openForm(p)},'✏️'),
+        el('button',{class:'icon',type:'button',title:'Borrar',onclick:e=>delParty(p,e.currentTarget)},'🗑️')):null
+    ));
+  }
+}
+// Lista simple para la tarea nocturna que busca flyers
+function renderPending(){
+  const list=$('#list');list.textContent='';
+  if(!gotParties){return;}
+  const today=todayStr();
+  const pend=parties.filter(p=>(p.fecha||'')>=today&&safeUrl(p.link||'')&&!flyerOf(p.id));
+  const waiting=parties.some(p=>flyerCache[p.id]==='loading'||!(p.id in flyerCache));
+  parties.forEach(p=>loadFlyer(p.id));
+  list.append(el('div',{class:'pend',id:'pendientes'},waiting?'CARGANDO…':(pend.length?'PENDIENTES\n'+pend.map(p=>p.id+' | '+p.link).join('\n'):'SIN PENDIENTES')));
+}
+window.addEventListener('hashchange',render);
+
+// ---------- votar ----------
+let voteChain=Promise.resolve();
+function vote(pid,k){
+  if(!canWrite())return;
+  const cur={...(votes[me.uid]?.v||{})};
+  if(cur[pid]===k)delete cur[pid];else cur[pid]=k;
+  votes={...votes,[me.uid]:{name:me.name,v:cur}};render();
+  voteChain=voteChain.then(()=>setDoc(doc(db,'votes',me.uid),{name:me.name,v:cur,at:serverTimestamp()})).catch(()=>setStatus('No se pudo guardar tu voto. Probá de nuevo.',true));
+}
+
+// ---------- formulario ----------
+function openLight(src){$('#lightImg').src=src;$('#lightbox').classList.add('open');}
+$('#lightbox').onclick=()=>$('#lightbox').classList.remove('open');
+function showFormImg(){
+  const pv=$('#imgPreview');
+  if(formImg){pv.src=formImg;pv.hidden=false;}else{pv.hidden=true;pv.removeAttribute('src');}
+  $('#imgRemove').hidden=!formImg;$('#imgPick').textContent=formImg?'Cambiar':'Subir imagen';
+}
+function compress(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file);const im=new Image();
+    im.onload=()=>{const max=1000;let {width:w,height:h}=im;const r=Math.min(1,max/Math.max(w,h));w=Math.round(w*r);h=Math.round(h*r);
+      const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(url);
+      let q=0.85,out=c.toDataURL('image/jpeg',q);while(out.length>700000&&q>0.4){q-=0.1;out=c.toDataURL('image/jpeg',q);}res(out);};
+    im.onerror=()=>{URL.revokeObjectURL(url);rej();};im.src=url;});
+}
+async function takeImg(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  $('#imgHint').textContent='Procesando…';
+  try{formImg=await compress(file);formImgChanged=true;$('#imgHint').textContent='';showFormImg();}
+  catch(e){$('#imgHint').textContent='No se pudo leer esa imagen.';}
+}
+$('#imgPick').onclick=()=>$('#imgFile').click();
+$('#imgFile').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';takeImg(f);};
+$('#imgRemove').onclick=()=>{formImg=null;formImgChanged=true;showFormImg();};
+$('#form').addEventListener('paste',e=>{const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));if(it){e.preventDefault();takeImg(it.getAsFile());}});
+$('#imgbox').addEventListener('dragover',e=>e.preventDefault());
+$('#imgbox').addEventListener('drop',e=>{e.preventDefault();takeImg(e.dataTransfer?.files?.[0]);});
+
+function openForm(p){
+  editingId=p?p.id:null;
+  $('#formTitle').textContent=p?'Editar fiesta':'Nueva fiesta';
+  F.forEach(k=>$('#f-'+k).value=(p&&p[k])||'');
+  formImg=p?flyerOf(p.id):null;formImgChanged=false;showFormImg();
+  $('#formErr').textContent='';$('#scrim').classList.add('open');setTimeout(()=>$('#f-nombre').focus(),30);
+}
+function closeForm(){$('#scrim').classList.remove('open');editingId=null;}
+$('#addBtn').onclick=()=>openForm(null);
+$('#cancelBtn').onclick=closeForm;
+$('#scrim').addEventListener('click',e=>{if(e.target.id==='scrim')closeForm();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeForm();closeMembers();$('#lightbox').classList.remove('open');}});
+$('#form').addEventListener('submit',async e=>{
+  e.preventDefault();if(!canWrite())return;
+  const data={};F.forEach(k=>data[k]=$('#f-'+k).value.trim());
+  if(data.link&&!safeUrl(data.link)){$('#formErr').textContent='El link tiene que empezar con https://';return;}
+  const btn=$('#saveBtn');btn.disabled=true;
+  try{
+    const id=editingId||doc(collection(db,'parties')).id;
+    const old=parties.find(x=>x.id===id)||{};
+    await setDoc(doc(db,'parties',id),{...data,createdBy:old.createdBy||me.uid,createdByName:old.createdByName||(editingId?'':me.name),createdAt:old.createdAt||Date.now(),updatedAt:Date.now()});
+    if(formImgChanged){
+      if(formImg&&formImg.startsWith('data:'))await setDoc(doc(db,'flyers',id),{data:formImg,by:me.uid,at:Date.now()});
+      else if(!formImg)await deleteDoc(doc(db,'flyers',id));
+      delete flyerCache[id];
+    }
+    closeForm();render();
+  }catch(err){$('#formErr').textContent=(err&&err.code==='permission-denied')?'No tenés permiso para guardar esto.':'No se pudo guardar. Probá de nuevo.';}
+  finally{btn.disabled=false;}
+});
+async function delParty(p,btn){
+  if(btn.dataset.armed!=='1'){btn.dataset.armed='1';btn.textContent='¿Seguro?';setTimeout(()=>{if(btn.isConnected){btn.dataset.armed='';btn.textContent='🗑️';}},3000);return;}
+  try{await deleteDoc(doc(db,'parties',p.id));deleteDoc(doc(db,'flyers',p.id)).catch(()=>{});}catch(e){setStatus('No se pudo borrar.',true);}
+}
+
+// ---------- miembros (admin) ----------
+function openMembers(){renderMembers();$('#membersErr').textContent='';$('#membersScrim').classList.add('open');}
+function closeMembers(){$('#membersScrim').classList.remove('open');}
+$('#membersClose').onclick=closeMembers;
+$('#membersScrim').addEventListener('click',e=>{if(e.target.id==='membersScrim')closeMembers();});
+function renderMembers(){
+  const ul=$('#membersList');ul.textContent='';
+  ul.append(el('li',null,el('span',null,owner+' (admin)')));
+  members.filter(m=>m!==owner).forEach(m=>ul.append(el('li',null,el('span',null,m),el('button',{class:'icon',type:'button',onclick:()=>saveMembers(members.filter(x=>x!==m))},'Quitar'))));
+}
+async function saveMembers(list){
+  try{await setDoc(doc(db,'config','members'),{emails:list});members=list;renderMembers();}
+  catch(e){$('#membersErr').textContent='No se pudo guardar.';}
+}
+$('#memberAdd').onclick=()=>{
+  const v=$('#memberEmail').value.trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){$('#membersErr').textContent='Ese email no parece válido.';return;}
+  if(!members.includes(v))saveMembers([...members,v]);
+  $('#memberEmail').value='';$('#membersErr').textContent='';
+};
+
+// ---------- migración desde la versión anterior (una sola vez, admin) ----------
+async function importSeed(e){
+  const btn=e.currentTarget;btn.disabled=true;btn.textContent='Importando…';
+  try{
+    const seed=await (await fetch('seed.json',{cache:'no-store'})).json();
+    const b=writeBatch(db);
+    (seed.parties||[]).forEach(p=>{const {id,...rest}=p;b.set(doc(db,'parties',id),rest);});
+    (seed.votes||[]).forEach(v=>{const {id,...rest}=v;b.set(doc(db,'votes',id),rest);});
+    if(Array.isArray(seed.members)&&seed.members.length){const cur=new Set(members);seed.members.forEach(m=>cur.add(String(m).toLowerCase()));members=[...cur];b.set(doc(db,'config','members'),{emails:members});}
+    b.set(doc(db,'config','meta'),{imported:true,at:Date.now()});
+    await b.commit();
+  }catch(err){btn.disabled=false;btn.textContent='Importar';setStatus('No se pudo importar. Probá de nuevo.',true);}
+}
+async function clearLegacy(){
+  const ids=Object.keys(votes).filter(k=>k.startsWith('legacy-'));
+  const b=writeBatch(db);ids.forEach(id=>b.delete(doc(db,'votes',id)));
+  try{await b.commit();}catch(e){setStatus('No se pudieron borrar los votos viejos.',true);}
+}
+
+document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{sortBy=b.dataset.sort;document.querySelectorAll('[data-sort]').forEach(x=>x.classList.toggle('on',x===b));render();});
+$('#pastToggle').onclick=e=>{showPast=!showPast;e.currentTarget.classList.toggle('on',showPast);e.currentTarget.textContent=showPast?'Ocultar pasadas':'Mostrar pasadas';render();};
+renderTopbar();
+</script>
+</body>
+</html>

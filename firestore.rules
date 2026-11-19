@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function isOwner() {
+      return signedIn() && request.auth.token.email.lower() == 'maximiliano.ibalborde@gmail.com';
+    }
+    function isMember() {
+      return signedIn() && (
+        isOwner() ||
+        request.auth.token.email.lower() in get(/databases/$(database)/documents/config/members).data.emails
+      );
+    }
+    function validParty() {
+      let d = request.resource.data;
+      return d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 120
+          && d.fecha is string && d.fecha.size() == 10
+          && d.lugar is string && d.lugar.size() <= 120
+          && d.link is string && d.link.size() <= 500
+          && d.notas is string && d.notas.size() <= 600;
+    }
+
+    // Lista de miembros: la ven los que entraron; solo el admin la cambia.
+    match /config/members {
+      allow read: if signedIn();
+      allow write: if isOwner();
+    }
+    match /config/meta {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // Fiestas: las ve cualquiera. Cargan los miembros; editan/borran quien la cargó o el admin.
+    match /parties/{id} {
+      allow read: if true;
+      allow create: if isMember() && validParty() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if validParty() && (isOwner() || (isMember() && resource.data.createdBy == request.auth.uid));
+      allow delete: if isOwner() || (isMember() && resource.data.createdBy == request.auth.uid);
+    }
+
+    // Flyers (imagen comprimida dentro del documento)
+    match /flyers/{id} {
+      allow read: if true;
+      allow create, update: if isMember() && request.resource.data.data is string
+                            && request.resource.data.data.size() < 900000;
+      allow delete: if isMember();
+    }
+
+    // Votos: los ve cualquiera; cada miembro escribe solo el suyo. El admin puede limpiar.
+    match /votes/{uid} {
+      allow read: if true;
+      allow write: if isOwner() || (isMember() && request.auth.uid == uid);
+    }
+  }
+}
